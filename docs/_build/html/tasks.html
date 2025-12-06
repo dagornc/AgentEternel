@@ -1,0 +1,228 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tasks module &mdash; AgentEternel  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="state module" href="state.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AgentEternel
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme_link.html">Readme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">AgentEternel</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agents.html">agents module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">graph module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="main.html">main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state.html">state module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">tasks module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tasks.cross_pollination_task"><code class="docutils literal notranslate"><span class="pre">cross_pollination_task()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tasks.debate_task"><code class="docutils literal notranslate"><span class="pre">debate_task()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tasks.hypothesis_task"><code class="docutils literal notranslate"><span class="pre">hypothesis_task()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tasks.recruit_task"><code class="docutils literal notranslate"><span class="pre">recruit_task()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tasks.synthesis_task"><code class="docutils literal notranslate"><span class="pre">synthesis_task()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AgentEternel</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">AgentEternel</a></li>
+      <li class="breadcrumb-item active">tasks module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tasks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-tasks">
+<span id="tasks-module"></span><h1>tasks module<a class="headerlink" href="#module-tasks" title="Link to this heading"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tasks.cross_pollination_task">
+<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">cross_pollination_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_hypothesis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_hypotheses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tasks.html#cross_pollination_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tasks.cross_pollination_task" title="Link to this definition"></a></dt>
+<dd><p>Creates a task for cross-pollinating ideas between experts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<em>Agent</em>) – The expert agent performing the cross-pollination.</p></li>
+<li><p><strong>current_hypothesis</strong> (<em>str</em>) – The expert’s own initial hypothesis.</p></li>
+<li><p><strong>other_hypotheses</strong> (<em>list</em>) – List of hypotheses from other experts.</p></li>
+<li><p><strong>input_query</strong> (<em>str</em>) – The original problem statement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI task for enriching the hypothesis.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Task</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tasks.debate_task">
+<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">debate_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypotheses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tasks.html#debate_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tasks.debate_task" title="Link to this definition"></a></dt>
+<dd><p>Creates a task for debating the proposed hypotheses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<em>Agent</em>) – The Devil’s Advocate agent.</p></li>
+<li><p><strong>hypotheses</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – A list of hypotheses from the experts.</p></li>
+<li><p><strong>input_query</strong> (<em>str</em>) – The original problem statement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Task object for the debate phase.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Task</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tasks.hypothesis_task">
+<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">hypothesis_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tasks.html#hypothesis_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tasks.hypothesis_task" title="Link to this definition"></a></dt>
+<dd><p>Creates a task for generating a hypothesis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<em>Agent</em>) – The expert agent generating the hypothesis.</p></li>
+<li><p><strong>input_query</strong> (<em>str</em>) – The problem statement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Task object for hypothesis generation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Task</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tasks.recruit_task">
+<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">recruit_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tasks.html#recruit_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tasks.recruit_task" title="Link to this definition"></a></dt>
+<dd><p>Creates a task for recruiting experts based on the input query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<em>Agent</em>) – The agent responsible for this task (Recruiter).</p></li>
+<li><p><strong>input_query</strong> (<em>str</em>) – The problem statement or query to analyze.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Task object configured for recruiting experts.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Task</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tasks.synthesis_task">
+<span class="sig-prename descclassname"><span class="pre">tasks.</span></span><span class="sig-name descname"><span class="pre">synthesis_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">agent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debate_minutes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hypotheses</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_query</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tasks.html#synthesis_task"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tasks.synthesis_task" title="Link to this definition"></a></dt>
+<dd><p>Creates a task for synthesizing the final solution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>agent</strong> (<em>Agent</em>) – The Synthesizer agent.</p></li>
+<li><p><strong>debate_minutes</strong> (<em>str</em>) – The critique from the debate phase.</p></li>
+<li><p><strong>hypotheses</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – The original hypotheses.</p></li>
+<li><p><strong>input_query</strong> (<em>str</em>) – The original problem statement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Task object for the synthesis phase.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Task</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="state.html" class="btn btn-neutral float-left" title="state module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, AgentEternel Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

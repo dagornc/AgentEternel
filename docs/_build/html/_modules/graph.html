@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>graph &mdash; AgentEternel  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            AgentEternel
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">AgentEternel</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">AgentEternel</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">graph</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for graph</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Defines the LangGraph workflow for the Nexus-Science agent.</span>
+
+<span class="sd">This module sets up the state graph, nodes, and edges for the multi-agent research process.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">langgraph.graph</span><span class="w"> </span><span class="kn">import</span> <span class="n">StateGraph</span><span class="p">,</span> <span class="n">END</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">state</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentState</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecruiterAgent</span><span class="p">,</span> <span class="n">create_expert_agent</span><span class="p">,</span> <span class="n">DevilsAdvocate</span><span class="p">,</span> <span class="n">Synthesizer</span><span class="p">,</span> <span class="n">get_alpha_evolve_expert</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">recruit_task</span><span class="p">,</span> <span class="n">hypothesis_task</span><span class="p">,</span> <span class="n">debate_task</span><span class="p">,</span> <span class="n">synthesis_task</span><span class="p">,</span> <span class="n">cross_pollination_task</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crewai</span><span class="w"> </span><span class="kn">import</span> <span class="n">Crew</span><span class="p">,</span> <span class="n">Process</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">crewai</span><span class="w"> </span><span class="kn">import</span> <span class="n">Crew</span><span class="p">,</span> <span class="n">Process</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="c1"># ...</span>
+
+<div class="viewcode-block" id="recruit_node">
+<a class="viewcode-back" href="../graph.html#graph.recruit_node">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">recruit_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Node for recruiting experts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        state (AgentState): The current state of the workflow.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: A dictionary containing the recruited &#39;experts&#39; and initializing &#39;iterations&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- RECRUITING EXPERTS ---&quot;</span><span class="p">)</span>
+    <span class="n">recruiter</span> <span class="o">=</span> <span class="n">RecruiterAgent</span><span class="p">()</span>
+    <span class="n">agent</span> <span class="o">=</span> <span class="n">recruiter</span><span class="o">.</span><span class="n">recruit</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">],</span> <span class="n">temperature</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">))</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">recruit_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+    
+    <span class="c1"># Memory disabled due to embedding API key issues</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span><span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">agent</span><span class="p">],</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">sequential</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">()</span>
+    
+    <span class="c1"># ... (rest of parsing logic same as before, ensuring it uses pydantic)</span>
+    <span class="n">experts_data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Check if result has pydantic output</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;pydantic&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">pydantic</span><span class="p">:</span>
+             <span class="c1"># result.pydantic is an ExpertList instance</span>
+             <span class="k">for</span> <span class="n">expert</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">pydantic</span><span class="o">.</span><span class="n">experts</span><span class="p">:</span>
+                 <span class="n">experts_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">expert</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;json_dict&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="p">:</span>
+             <span class="k">if</span> <span class="s1">&#39;experts&#39;</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="p">:</span>
+                 <span class="n">experts_data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="p">[</span><span class="s1">&#39;experts&#39;</span><span class="p">]</span>
+             <span class="k">else</span><span class="p">:</span>
+                 <span class="n">experts_data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Fallback for string parsing</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: Pydantic output not found in recruit_node.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No structured output returned&quot;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERREUR lors du parsing des experts : </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Fallback</span>
+        <span class="n">experts_data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Expert A&quot;</span><span class="p">,</span> <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;Generalist&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="s2">&quot;Neutral&quot;</span><span class="p">,</span> <span class="s2">&quot;skill&quot;</span><span class="p">:</span> <span class="s2">&quot;Problem Solving&quot;</span><span class="p">,</span> <span class="s2">&quot;backstory&quot;</span><span class="p">:</span> <span class="s2">&quot;Experienced generalist solver.&quot;</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Expert B&quot;</span><span class="p">,</span> <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;Specialist&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="s2">&quot;Technical&quot;</span><span class="p">,</span> <span class="s2">&quot;skill&quot;</span><span class="p">:</span> <span class="s2">&quot;Analysis&quot;</span><span class="p">,</span> <span class="s2">&quot;backstory&quot;</span><span class="p">:</span> <span class="s2">&quot;Technical specialist with deep analytical skills.&quot;</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Expert C&quot;</span><span class="p">,</span> <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;Reviewer&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="s2">&quot;Critical&quot;</span><span class="p">,</span> <span class="s2">&quot;skill&quot;</span><span class="p">:</span> <span class="s2">&quot;Evaluation&quot;</span><span class="p">,</span> <span class="s2">&quot;backstory&quot;</span><span class="p">:</span> <span class="s2">&quot;Critical reviewer focused on evaluation.&quot;</span><span class="p">}</span>
+        <span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using fallback experts.&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using fallback experts.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># SYSTEMATICALLY ADD ALPHAEVOLVE EXPERT</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="n">alpha_expert</span> <span class="o">=</span> <span class="n">get_alpha_evolve_expert</span><span class="p">()</span>
+    <span class="c1"># Check if not already present (based on name)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">alpha_expert</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">experts_data</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding systematic expert: </span><span class="si">{</span><span class="n">alpha_expert</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">experts_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alpha_expert</span><span class="p">)</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;experts&quot;</span><span class="p">:</span> <span class="n">experts_data</span><span class="p">,</span> <span class="s2">&quot;iterations&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="hypothesis_node">
+<a class="viewcode-back" href="../graph.html#graph.hypothesis_node">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hypothesis_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Node for generating hypotheses from experts.</span>
+<span class="sd">    PARALLELIZED.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- GÉNÉRATION DES HYPOTHÈSES ---&quot;</span><span class="p">)</span>
+    <span class="n">experts_data</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;experts&#39;</span><span class="p">]</span>
+    <span class="n">hypotheses</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># Sequential execution for stability</span>
+    <span class="k">for</span> <span class="n">expert_data</span> <span class="ow">in</span> <span class="n">experts_data</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">agent</span> <span class="o">=</span> <span class="n">create_expert_agent</span><span class="p">(</span><span class="n">expert_data</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">))</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">hypothesis_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+            <span class="c1"># Memory disabled</span>
+            <span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span><span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">agent</span><span class="p">],</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+            <span class="n">result</span> <span class="o">=</span> <span class="n">crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">()</span>
+            <span class="n">hypotheses</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;expert_name&quot;</span><span class="p">:</span> <span class="n">expert_data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="s2">&quot;hypothesis&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error executing expert </span><span class="si">{</span><span class="n">expert_data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">hypotheses</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;expert_name&quot;</span><span class="p">:</span> <span class="n">expert_data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="s2">&quot;hypothesis&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;hypotheses&quot;</span><span class="p">:</span> <span class="n">hypotheses</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="cross_pollination_node">
+<a class="viewcode-back" href="../graph.html#graph.cross_pollination_node">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cross_pollination_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Node for cross-pollination between experts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- CROSS-POLLINATION (Transdisciplinarité) ---&quot;</span><span class="p">)</span>
+    <span class="n">hypotheses</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;hypotheses&#39;</span><span class="p">]</span>
+    <span class="n">experts_data</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;experts&#39;</span><span class="p">]</span>
+    
+    <span class="n">enriched_hypotheses</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="c1"># Map expert name to full expert data for easy lookup</span>
+    <span class="n">expert_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]:</span> <span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">experts_data</span><span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hypotheses</span><span class="p">:</span>
+        <span class="n">expert_name</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s1">&#39;expert_name&#39;</span><span class="p">]</span>
+        <span class="n">current_hypothesis</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="s1">&#39;hypothesis&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># Get expert data</span>
+        <span class="n">expert_data</span> <span class="o">=</span> <span class="n">expert_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">expert_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">expert_data</span><span class="p">:</span>
+            <span class="k">continue</span>
+            
+        <span class="c1"># Get other hypotheses</span>
+        <span class="n">other_hypotheses</span> <span class="o">=</span> <span class="p">[</span><span class="n">oh</span> <span class="k">for</span> <span class="n">oh</span> <span class="ow">in</span> <span class="n">hypotheses</span> <span class="k">if</span> <span class="n">oh</span><span class="p">[</span><span class="s1">&#39;expert_name&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">expert_name</span><span class="p">]</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">agent</span> <span class="o">=</span> <span class="n">create_expert_agent</span><span class="p">(</span><span class="n">expert_data</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">))</span>
+            <span class="n">task</span> <span class="o">=</span> <span class="n">cross_pollination_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">current_hypothesis</span><span class="p">,</span> <span class="n">other_hypotheses</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+            
+            <span class="c1"># Memory disabled</span>
+            <span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span><span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">agent</span><span class="p">],</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">()</span>
+            
+            <span class="n">enriched_hypotheses</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;expert_name&quot;</span><span class="p">:</span> <span class="n">expert_name</span><span class="p">,</span> 
+                <span class="s2">&quot;hypothesis&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="c1"># Replaces the old hypothesis with the enriched one</span>
+            <span class="p">})</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error in cross-pollination for </span><span class="si">{</span><span class="n">expert_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+             <span class="n">enriched_hypotheses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="c1"># Keep original if error</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;hypotheses&quot;</span><span class="p">:</span> <span class="n">enriched_hypotheses</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="debate_node">
+<a class="viewcode-back" href="../graph.html#graph.debate_node">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">debate_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Node for the debate phase.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- DÉBAT ---&quot;</span><span class="p">)</span>
+    <span class="n">devils_advocate</span> <span class="o">=</span> <span class="n">DevilsAdvocate</span><span class="p">()</span><span class="o">.</span><span class="n">get_agent</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">))</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">debate_task</span><span class="p">(</span><span class="n">devils_advocate</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;hypotheses&#39;</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+    
+    <span class="c1"># Memory disabled</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span><span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">devils_advocate</span><span class="p">],</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;debate_minutes&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)}</span></div>
+
+
+<div class="viewcode-block" id="synthesis_node">
+<a class="viewcode-back" href="../graph.html#graph.synthesis_node">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">synthesis_node</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Node for synthesizing the final solution.</span>
+<span class="sd">    Uses Pydantic structured output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;--- SYNTHESIS ---&quot;</span><span class="p">)</span>
+    <span class="n">synthesizer</span> <span class="o">=</span> <span class="n">Synthesizer</span><span class="p">()</span><span class="o">.</span><span class="n">get_agent</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">))</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">synthesis_task</span><span class="p">(</span><span class="n">synthesizer</span><span class="p">,</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;debate_minutes&#39;</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;hypotheses&#39;</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">])</span>
+    
+    <span class="c1"># Memory disabled</span>
+    <span class="n">crew</span> <span class="o">=</span> <span class="n">Crew</span><span class="p">(</span><span class="n">agents</span><span class="o">=</span><span class="p">[</span><span class="n">synthesizer</span><span class="p">],</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">task</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">crew</span><span class="o">.</span><span class="n">kickoff</span><span class="p">()</span>
+    
+    <span class="c1"># Extract confidence score from Pydantic output</span>
+    <span class="n">solution</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="mf">0.0</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;pydantic&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">pydantic</span><span class="p">:</span>
+            <span class="n">solution</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">pydantic</span><span class="o">.</span><span class="n">solution</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">pydantic</span><span class="o">.</span><span class="n">confidence_score</span>
+            <span class="n">gaps</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">pydantic</span><span class="p">,</span> <span class="s1">&#39;knowledge_gaps&#39;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">viz_code</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">pydantic</span><span class="p">,</span> <span class="s1">&#39;visualization_code&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="s1">&#39;json_dict&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="p">:</span>
+            <span class="n">solution</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;solution&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">))</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;confidence_score&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">gaps</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;knowledge_gaps&#39;</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">viz_code</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;visualization_code&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+             <span class="c1"># Fallback</span>
+             <span class="n">solution</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+             <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Confidence Score.*?(\d+(\.\d+)?)&#39;</span><span class="p">,</span> <span class="n">solution</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+             <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                  <span class="n">score</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+             <span class="n">gaps</span> <span class="o">=</span> <span class="p">[]</span>
+             <span class="n">viz_code</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error parsing synthesis: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        <span class="n">gaps</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">viz_code</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        
+    <span class="c1"># Update input with gaps if looping</span>
+    <span class="n">new_input</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">score</span> <span class="o">&lt;</span> <span class="mi">80</span> <span class="ow">and</span> <span class="n">gaps</span><span class="p">:</span>
+         <span class="n">gaps_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">- &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">gaps</span><span class="p">)</span>
+         <span class="c1"># Check if we already appended to avoid duplication</span>
+         <span class="k">if</span> <span class="s2">&quot;[ITERATION UPDATE]&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_input</span><span class="p">:</span>
+             <span class="n">new_input</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[ITERATION UPDATE] Focus on these Knowledge Gaps:</span><span class="se">\n</span><span class="s2">- </span><span class="si">{</span><span class="n">gaps_text</span><span class="si">}</span><span class="s2">&quot;</span>
+         <span class="k">else</span><span class="p">:</span>
+             <span class="c1"># Basic append for now, or replace logic if feeling fancy. </span>
+             <span class="c1"># Let&#39;s just append new gaps.</span>
+             <span class="n">new_input</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">[NEW GAPS]:</span><span class="se">\n</span><span class="s2">- </span><span class="si">{</span><span class="n">gaps_text</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;final_solution&quot;</span><span class="p">:</span> <span class="n">solution</span><span class="p">,</span> <span class="s2">&quot;confidence_score&quot;</span><span class="p">:</span> <span class="n">score</span><span class="p">,</span> <span class="s2">&quot;iterations&quot;</span><span class="p">:</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;knowledge_gaps&quot;</span><span class="p">:</span> <span class="n">gaps</span><span class="p">,</span> <span class="s2">&quot;visualization_code&quot;</span><span class="p">:</span> <span class="n">viz_code</span><span class="p">,</span> <span class="s2">&quot;input&quot;</span><span class="p">:</span> <span class="n">new_input</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="check_confidence">
+<a class="viewcode-back" href="../graph.html#graph.check_confidence">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_confidence</span><span class="p">(</span><span class="n">state</span><span class="p">:</span> <span class="n">AgentState</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conditional edge to check if the confidence score is sufficient or if max iterations are reached.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;target_confidence_score&#39;</span><span class="p">,</span> <span class="mf">80.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;confidence_score&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">target</span> <span class="ow">or</span> <span class="n">state</span><span class="p">[</span><span class="s1">&#39;iterations&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;end&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;loop&quot;</span></div>
+
+
+<span class="n">workflow</span> <span class="o">=</span> <span class="n">StateGraph</span><span class="p">(</span><span class="n">AgentState</span><span class="p">)</span>
+
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;recruit&quot;</span><span class="p">,</span> <span class="n">recruit_node</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;hypothesis&quot;</span><span class="p">,</span> <span class="n">hypothesis_node</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;cross_pollination&quot;</span><span class="p">,</span> <span class="n">cross_pollination_node</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;debate&quot;</span><span class="p">,</span> <span class="n">debate_node</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;synthesis&quot;</span><span class="p">,</span> <span class="n">synthesis_node</span><span class="p">)</span>
+
+<span class="n">workflow</span><span class="o">.</span><span class="n">set_entry_point</span><span class="p">(</span><span class="s2">&quot;recruit&quot;</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;recruit&quot;</span><span class="p">,</span> <span class="s2">&quot;hypothesis&quot;</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;hypothesis&quot;</span><span class="p">,</span> <span class="s2">&quot;cross_pollination&quot;</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;cross_pollination&quot;</span><span class="p">,</span> <span class="s2">&quot;debate&quot;</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="s2">&quot;debate&quot;</span><span class="p">,</span> <span class="s2">&quot;synthesis&quot;</span><span class="p">)</span>
+
+<span class="n">workflow</span><span class="o">.</span><span class="n">add_conditional_edges</span><span class="p">(</span>
+    <span class="s2">&quot;synthesis&quot;</span><span class="p">,</span>
+    <span class="n">check_confidence</span><span class="p">,</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="n">END</span><span class="p">,</span>
+        <span class="s2">&quot;loop&quot;</span><span class="p">:</span> <span class="s2">&quot;hypothesis&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, AgentEternel Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

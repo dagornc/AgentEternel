@@ -1,0 +1,284 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agents &mdash; AgentEternel  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            AgentEternel
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">AgentEternel</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">AgentEternel</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">agents</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for agents</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">crewai</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">LLM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crewai.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseTool</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">crewai_tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">SerperDevTool</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">langchain_community.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">DuckDuckGoSearchRun</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArxivTool</span><span class="p">,</span> <span class="n">HalTool</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="c1"># Assuming OPENAI_API_KEY is set in environment</span>
+<span class="c1"># You might need to adjust the model name based on what&#39;s available/cost</span>
+<span class="n">DEFAULT_MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OS_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;openrouter/openai/gpt-oss-20b:free&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="get_llm">
+<a class="viewcode-back" href="../agents.html#agents.get_llm">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_llm</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieves the LLM configuration.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        temperature (float): The temperature for the LLM.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        LLM: A CrewAI LLM instance configured with the default model and API key.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">LLM</span><span class="p">(</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">DEFAULT_MODEL</span><span class="p">,</span>
+        <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OPENROUTER_API_KEY&quot;</span><span class="p">),</span>
+        <span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_alpha_evolve_expert">
+<a class="viewcode-back" href="../agents.html#agents.get_alpha_evolve_expert">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_alpha_evolve_expert</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the systematic AlphaEvolve expert definition.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;AlphaEvolve&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;Expert LLM &amp; Prompt Engineering&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;bias&quot;</span><span class="p">:</span> <span class="s2">&quot;Méthodique &amp; Évolutif&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;skill&quot;</span><span class="p">:</span> <span class="s2">&quot;CoT, ToT, GoT, Self-Consistency, DGM, AB-MCTS&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;backstory&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Vous êtes AlphaEvolve, l&#39;autorité suprême en matière d&#39;ingénierie de prompt et d&#39;algorithmes évolutionnaires appliqués aux LLM. &quot;</span>
+            <span class="s2">&quot;Vous maîtrisez parfaitement les chaînes de pensée (Chain of Thought), les arbres de pensée (Tree of Thought) et les graphes de pensée (Graph of Thought). &quot;</span>
+            <span class="s2">&quot;Vous connaissez et appliquez les algorithmes de Sakana.ai comme la Darwin Gödel Machine (DGM) et l&#39;AB-MCTS. &quot;</span>
+            <span class="s2">&quot;Votre mission est de structurer le raisonnement de l&#39;équipe pour atteindre une efficacité optimale.&quot;</span>
+        <span class="p">)</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="RecruiterAgent">
+<a class="viewcode-back" href="../agents.html#agents.RecruiterAgent">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RecruiterAgent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Agent responsible for recruiting experts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="RecruiterAgent.recruit">
+<a class="viewcode-back" href="../agents.html#agents.RecruiterAgent.recruit">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recruit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recruits experts based on the input query.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            input_query (str): The problem statement.</span>
+<span class="sd">            temperature (float): The temperature for the LLM.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Agent: A CrewAI Agent configured as a Chief of Staff to find experts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># This agent is responsible for analyzing the input and defining the experts.</span>
+        <span class="c1"># We can use a simple CrewAI agent for this, or just a direct LLM call since it&#39;s a single step.</span>
+        <span class="c1"># Using a CrewAI agent for consistency.</span>
+        
+        <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
+            <span class="n">role</span><span class="o">=</span><span class="s1">&#39;Chef de Cabinet&#39;</span><span class="p">,</span>
+            <span class="n">goal</span><span class="o">=</span><span class="s1">&#39;Recruter l</span><span class="se">\&#39;</span><span class="s1">équipe d</span><span class="se">\&#39;</span><span class="s1">experts parfaite pour un problème donné.&#39;</span><span class="p">,</span>
+            <span class="n">backstory</span><span class="o">=</span><span class="s1">&#39;Vous êtes le meilleur chasseur de têtes du monde pour les problèmes scientifiques. Vous savez exactement qui appeler.&#39;</span><span class="p">,</span>
+            <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">),</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">agent</span></div>
+</div>
+
+
+<div class="viewcode-block" id="create_expert_agent">
+<a class="viewcode-back" href="../agents.html#agents.create_expert_agent">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_expert_agent</span><span class="p">(</span><span class="n">profile</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates an expert agent based on a profile.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        profile (dict): A dictionary containing &#39;name&#39;, &#39;role&#39;, &#39;bias&#39;, and &#39;skill&#39;.</span>
+<span class="sd">        temperature (float): The temperature for the LLM.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Agent: A CrewAI Agent configured with the expert&#39;s profile.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tools</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Add tools based on availability</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SERPER_API_KEY&quot;</span><span class="p">):</span>
+         <span class="n">tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SerperDevTool</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+         <span class="c1"># Fallback to DDG if no Serper key</span>
+         <span class="c1"># Wrap LangChain tool for CrewAI compatibility using BaseTool class</span>
+         <span class="k">class</span><span class="w"> </span><span class="nc">DDGTool</span><span class="p">(</span><span class="n">BaseTool</span><span class="p">):</span>
+             <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;DuckDuckGo Search&quot;</span>
+             <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Useful for searching the internet for information.&quot;</span>
+             
+             <span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+                 <span class="k">return</span> <span class="n">DuckDuckGoSearchRun</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+
+         <span class="n">tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DDGTool</span><span class="p">())</span>
+
+    <span class="c1"># Add Academic Tools if the role suggests research or if it&#39;s the Librarian</span>
+    <span class="k">if</span> <span class="s2">&quot;research&quot;</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;recherche&quot;</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;librarian&quot;</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;chercheur&quot;</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;alphaevolve&quot;</span> <span class="ow">in</span> <span class="n">profile</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+        <span class="n">tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ArxivTool</span><span class="p">())</span>
+        <span class="n">tools</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">HalTool</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span>
+        <span class="n">role</span><span class="o">=</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">],</span>
+        <span class="n">goal</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Résoudre le problème en utilisant votre expertise en </span><span class="si">{</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> et votre compétence en </span><span class="si">{</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;skill&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="n">backstory</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Vous êtes </span><span class="si">{</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">. Vous êtes un </span><span class="si">{</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;bias&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">. Votre compétence signature est </span><span class="si">{</span><span class="n">profile</span><span class="p">[</span><span class="s1">&#39;skill&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">),</span>
+        <span class="n">tools</span><span class="o">=</span><span class="n">tools</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DevilsAdvocate">
+<a class="viewcode-back" href="../agents.html#agents.DevilsAdvocate">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DevilsAdvocate</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Agent responsible for critiquing hypotheses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DevilsAdvocate.get_agent">
+<a class="viewcode-back" href="../agents.html#agents.DevilsAdvocate.get_agent">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the Devil&#39;s Advocate agent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            temperature (float): The temperature for the LLM.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Agent: A CrewAI Agent configured as the Devil&#39;s Advocate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">&quot;Avocat du Diable&quot;</span><span class="p">,</span>
+            <span class="n">goal</span><span class="o">=</span><span class="s2">&quot;Critiquer les hypothèses et trouver des failles, des sophismes et un manque de preuves.&quot;</span><span class="p">,</span>
+            <span class="n">backstory</span><span class="o">=</span><span class="s2">&quot;Vous êtes le Reviewer 2. Vous êtes sceptique, rigoureux et vous détestez les affirmations non fondées. Vous recherchez les hallucinations, la confusion corrélation/causalité et les biais méthodologiques.&quot;</span><span class="p">,</span>
+            <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">),</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
+</div>
+
+
+<div class="viewcode-block" id="Synthesizer">
+<a class="viewcode-back" href="../agents.html#agents.Synthesizer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Synthesizer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Agent responsible for synthesizing the final solution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Synthesizer.get_agent">
+<a class="viewcode-back" href="../agents.html#agents.Synthesizer.get_agent">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_agent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.7</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates the Synthesizer agent.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            temperature (float): The temperature for the LLM.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Agent: A CrewAI Agent configured as the Synthesizer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Agent</span><span class="p">(</span>
+            <span class="n">role</span><span class="o">=</span><span class="s2">&quot;Synthétiseur&quot;</span><span class="p">,</span>
+            <span class="n">goal</span><span class="o">=</span><span class="s2">&quot;Synthétiser le débat en une solution finale et attribuer un score de confiance.&quot;</span><span class="p">,</span>
+            <span class="n">backstory</span><span class="o">=</span><span class="s2">&quot;Vous êtes le décideur ultime. Vous écoutez toutes les parties, rejetez les idées invalides et fusionnez les meilleures en une solution unifiée.&quot;</span><span class="p">,</span>
+            <span class="n">llm</span><span class="o">=</span><span class="n">get_llm</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">temperature</span><span class="p">),</span>
+            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, AgentEternel Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

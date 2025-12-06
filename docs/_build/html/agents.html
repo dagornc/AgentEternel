@@ -1,0 +1,253 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>agents module &mdash; AgentEternel  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="graph module" href="graph.html" />
+    <link rel="prev" title="AgentEternel" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            AgentEternel
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme_link.html">Readme</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">AgentEternel</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">agents module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#agents.DevilsAdvocate"><code class="docutils literal notranslate"><span class="pre">DevilsAdvocate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agents.DevilsAdvocate.get_agent"><code class="docutils literal notranslate"><span class="pre">DevilsAdvocate.get_agent()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#agents.RecruiterAgent"><code class="docutils literal notranslate"><span class="pre">RecruiterAgent</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agents.RecruiterAgent.recruit"><code class="docutils literal notranslate"><span class="pre">RecruiterAgent.recruit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#agents.Synthesizer"><code class="docutils literal notranslate"><span class="pre">Synthesizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#agents.Synthesizer.get_agent"><code class="docutils literal notranslate"><span class="pre">Synthesizer.get_agent()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#agents.create_expert_agent"><code class="docutils literal notranslate"><span class="pre">create_expert_agent()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#agents.get_alpha_evolve_expert"><code class="docutils literal notranslate"><span class="pre">get_alpha_evolve_expert()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#agents.get_llm"><code class="docutils literal notranslate"><span class="pre">get_llm()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">graph module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="main.html">main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="state.html">state module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tasks.html">tasks module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">AgentEternel</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">AgentEternel</a></li>
+      <li class="breadcrumb-item active">agents module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/agents.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-agents">
+<span id="agents-module"></span><h1>agents module<a class="headerlink" href="#module-agents" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="agents.DevilsAdvocate">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">agents.</span></span><span class="sig-name descname"><span class="pre">DevilsAdvocate</span></span><a class="reference internal" href="_modules/agents.html#DevilsAdvocate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.DevilsAdvocate" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Agent responsible for critiquing hypotheses.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="agents.DevilsAdvocate.get_agent">
+<span class="sig-name descname"><span class="pre">get_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Agent</span></span></span><a class="reference internal" href="_modules/agents.html#DevilsAdvocate.get_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.DevilsAdvocate.get_agent" title="Link to this definition"></a></dt>
+<dd><p>Creates the Devil’s Advocate agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>temperature</strong> (<em>float</em>) – The temperature for the LLM.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Agent configured as the Devil’s Advocate.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Agent</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="agents.RecruiterAgent">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">agents.</span></span><span class="sig-name descname"><span class="pre">RecruiterAgent</span></span><a class="reference internal" href="_modules/agents.html#RecruiterAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.RecruiterAgent" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Agent responsible for recruiting experts.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="agents.RecruiterAgent.recruit">
+<span class="sig-name descname"><span class="pre">recruit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/agents.html#RecruiterAgent.recruit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.RecruiterAgent.recruit" title="Link to this definition"></a></dt>
+<dd><p>Recruits experts based on the input query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_query</strong> (<em>str</em>) – The problem statement.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – The temperature for the LLM.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Agent configured as a Chief of Staff to find experts.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Agent</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="agents.Synthesizer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">agents.</span></span><span class="sig-name descname"><span class="pre">Synthesizer</span></span><a class="reference internal" href="_modules/agents.html#Synthesizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.Synthesizer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Agent responsible for synthesizing the final solution.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="agents.Synthesizer.get_agent">
+<span class="sig-name descname"><span class="pre">get_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Agent</span></span></span><a class="reference internal" href="_modules/agents.html#Synthesizer.get_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.Synthesizer.get_agent" title="Link to this definition"></a></dt>
+<dd><p>Creates the Synthesizer agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>temperature</strong> (<em>float</em>) – The temperature for the LLM.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Agent configured as the Synthesizer.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Agent</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agents.create_expert_agent">
+<span class="sig-prename descclassname"><span class="pre">agents.</span></span><span class="sig-name descname"><span class="pre">create_expert_agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Agent</span></span></span><a class="reference internal" href="_modules/agents.html#create_expert_agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.create_expert_agent" title="Link to this definition"></a></dt>
+<dd><p>Creates an expert agent based on a profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profile</strong> (<em>dict</em>) – A dictionary containing ‘name’, ‘role’, ‘bias’, and ‘skill’.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – The temperature for the LLM.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI Agent configured with the expert’s profile.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Agent</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agents.get_alpha_evolve_expert">
+<span class="sig-prename descclassname"><span class="pre">agents.</span></span><span class="sig-name descname"><span class="pre">get_alpha_evolve_expert</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents.html#get_alpha_evolve_expert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.get_alpha_evolve_expert" title="Link to this definition"></a></dt>
+<dd><p>Returns the systematic AlphaEvolve expert definition.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="agents.get_llm">
+<span class="sig-prename descclassname"><span class="pre">agents.</span></span><span class="sig-name descname"><span class="pre">get_llm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/agents.html#get_llm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#agents.get_llm" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the LLM configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>temperature</strong> (<em>float</em>) – The temperature for the LLM.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A CrewAI LLM instance configured with the default model and API key.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>LLM</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="AgentEternel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="graph.html" class="btn btn-neutral float-right" title="graph module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, AgentEternel Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

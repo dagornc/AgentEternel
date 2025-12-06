@@ -1,0 +1,239 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tasks &mdash; AgentEternel  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            AgentEternel
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">AgentEternel</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">AgentEternel</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">tasks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for tasks</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">crewai</span><span class="w"> </span><span class="kn">import</span> <span class="n">Task</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">RecruiterAgent</span><span class="p">,</span> <span class="n">DevilsAdvocate</span><span class="p">,</span> <span class="n">Synthesizer</span><span class="p">,</span> <span class="n">create_expert_agent</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExpertList</span>
+
+<div class="viewcode-block" id="recruit_task">
+<a class="viewcode-back" href="../tasks.html#tasks.recruit_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">recruit_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">input_query</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a task for recruiting experts based on the input query.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        agent (Agent): The agent responsible for this task (Recruiter).</span>
+<span class="sd">        input_query (str): The problem statement or query to analyze.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Task: A CrewAI Task object configured for recruiting experts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Analyze the input: &#39;</span><span class="si">{</span><span class="n">input_query</span><span class="si">}</span><span class="s2">&#39;. Define the optimal team of experts to solve this problem. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Choose between 3 and 6 experts depending on the complexity. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;For each expert, provide: Name, Role, Bias, and Signature Skill. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;IMPORTANT: If the task involves research, YOU MUST include a &#39;Research Librarian&#39; expert specialized in searching repositories like hal.science, arxiv.org, researchgate.net, gutemberg.org, zenodo.org. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Also include a final member: The Devil&#39;s Advocate (Reviewer 2). &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Return the list of experts in a structured JSON format.&quot;</span><span class="p">,</span>
+        <span class="n">expected_output</span><span class="o">=</span><span class="s2">&quot;A list of experts.&quot;</span><span class="p">,</span>
+        <span class="n">agent</span><span class="o">=</span><span class="n">agent</span><span class="p">,</span>
+        <span class="n">output_pydantic</span><span class="o">=</span><span class="n">ExpertList</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hypothesis_task">
+<a class="viewcode-back" href="../tasks.html#tasks.hypothesis_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hypothesis_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">input_query</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a task for generating a hypothesis.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        agent (Agent): The expert agent generating the hypothesis.</span>
+<span class="sd">        input_query (str): The problem statement.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Task: A CrewAI Task object for hypothesis generation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Basé sur l&#39;entrée &#39;</span><span class="si">{</span><span class="n">input_query</span><span class="si">}</span><span class="s2">&#39;, générez une hypothèse initiale ou une solution. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Utilisez votre rôle et biais spécifiques. Ne soyez pas encore d&#39;accord avec les autres. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Utilisez le jargon technique et des références théoriques.&quot;</span><span class="p">,</span>
+        <span class="n">expected_output</span><span class="o">=</span><span class="s2">&quot;Une proposition d&#39;hypothèse ou de solution détaillée.&quot;</span><span class="p">,</span>
+        <span class="n">agent</span><span class="o">=</span><span class="n">agent</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="debate_task">
+<a class="viewcode-back" href="../tasks.html#tasks.debate_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">debate_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">hypotheses</span><span class="p">,</span> <span class="n">input_query</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a task for debating the proposed hypotheses.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        agent (Agent): The Devil&#39;s Advocate agent.</span>
+<span class="sd">        hypotheses (List[Dict]): A list of hypotheses from the experts.</span>
+<span class="sd">        input_query (str): The original problem statement.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Task: A CrewAI Task object for the debate phase.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hypotheses_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;expert_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;hypothesis&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hypotheses</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Examinez les hypothèses suivantes pour le problème &#39;</span><span class="si">{</span><span class="n">input_query</span><span class="si">}</span><span class="s2">&#39; :</span><span class="se">\n</span><span class="si">{</span><span class="n">hypotheses_text</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Critiquez-les agressivement. Identifiez les hallucinations, les erreurs de corrélation/causalité et les biais méthodologiques. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Mettez les experts au défi.&quot;</span><span class="p">,</span>
+        <span class="n">expected_output</span><span class="o">=</span><span class="s2">&quot;Une critique des hypothèses proposées, soulignant les défauts et exigeant des clarifications.&quot;</span><span class="p">,</span>
+        <span class="n">agent</span><span class="o">=</span><span class="n">agent</span>
+    <span class="p">)</span></div>
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ExpertList</span><span class="p">,</span> <span class="n">SynthesisReport</span>
+
+<span class="c1"># ... (rest of imports)</span>
+
+<div class="viewcode-block" id="synthesis_task">
+<a class="viewcode-back" href="../tasks.html#tasks.synthesis_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">synthesis_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">debate_minutes</span><span class="p">,</span> <span class="n">hypotheses</span><span class="p">,</span> <span class="n">input_query</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a task for synthesizing the final solution.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        agent (Agent): The Synthesizer agent.</span>
+<span class="sd">        debate_minutes (str): The critique from the debate phase.</span>
+<span class="sd">        hypotheses (List[Dict]): The original hypotheses.</span>
+<span class="sd">        input_query (str): The original problem statement.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Task: A CrewAI Task object for the synthesis phase.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Analysez les minutes du débat et les hypothèses originales pour &#39;</span><span class="si">{</span><span class="n">input_query</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Minutes du Débat :</span><span class="se">\n</span><span class="si">{</span><span class="n">debate_minutes</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Rejetez les idées invalides. Fusionnez les idées survivantes en une solution unifiée. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Attribuez un score de confiance (0-100%) basé sur la robustesse du débat. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;SI le score est inférieur à 80%, listez précisément les &#39;Knowledge Gaps&#39; (ce qu&#39;il manque pour être sûr). &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Générez également un code Mermaid.js (graph TD) représentant la carte des concepts clés et leurs relations transdisciplinaires. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Retournez la solution, le score, les lacunes et le code de visualisation dans un format structuré.&quot;</span><span class="p">,</span>
+        <span class="n">expected_output</span><span class="o">=</span><span class="s2">&quot;Un rapport final structuré.&quot;</span><span class="p">,</span>
+        <span class="n">agent</span><span class="o">=</span><span class="n">agent</span><span class="p">,</span>
+        <span class="n">output_pydantic</span><span class="o">=</span><span class="n">SynthesisReport</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cross_pollination_task">
+<a class="viewcode-back" href="../tasks.html#tasks.cross_pollination_task">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cross_pollination_task</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="n">current_hypothesis</span><span class="p">,</span> <span class="n">other_hypotheses</span><span class="p">,</span> <span class="n">input_query</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a task for cross-pollinating ideas between experts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        agent (Agent): The expert agent performing the cross-pollination.</span>
+<span class="sd">        current_hypothesis (str): The expert&#39;s own initial hypothesis.</span>
+<span class="sd">        other_hypotheses (list): List of hypotheses from other experts.</span>
+<span class="sd">        input_query (str): The original problem statement.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Task: A CrewAI task for enriching the hypothesis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">others_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;- </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;expert_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;role&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">h</span><span class="p">[</span><span class="s1">&#39;hypothesis&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">other_hypotheses</span><span class="p">])</span>
+    
+    <span class="k">return</span> <span class="n">Task</span><span class="p">(</span>
+        <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Vous êtes </span><span class="si">{</span><span class="n">agent</span><span class="o">.</span><span class="n">role</span><span class="si">}</span><span class="s2">. Vous avez proposé une hypothèse pour &#39;</span><span class="si">{</span><span class="n">input_query</span><span class="si">}</span><span class="s2">&#39;.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Voici les hypothèses de vos collègues :</span><span class="se">\n</span><span class="si">{</span><span class="n">others_text</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; VOTRE TÂCHE : Enrichissez votre propre hypothèse en vous inspirant des concepts des autres. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Cherchez des analogies, des ponts ou des fusions transdisciplinaires. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Ne changez pas votre domaine d&#39;expertise, mais intégrez intelligemment les idées des autres pour combler vos propres lacunes. &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Citez explicitement de qui vous vous inspirez (ex: &#39;Comme le suggère le Physicien...&#39;).&quot;</span><span class="p">,</span>
+        <span class="n">expected_output</span><span class="o">=</span><span class="s2">&quot;Une version enrichie et transdisciplinaire de votre hypothèse originale.&quot;</span><span class="p">,</span>
+        <span class="n">agent</span><span class="o">=</span><span class="n">agent</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, AgentEternel Team.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
