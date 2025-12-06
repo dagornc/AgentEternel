@@ -70,8 +70,8 @@ def main():
         # Ensure default legacy model is present or fallback
         default_model = "openrouter/openai/gpt-oss-20b:free"
         
-        # Append Custom option
-        model_options.append("Autre (Custom)...")
+        # Remove Custom option as per user strict requirement
+        # model_options.append("Autre (Custom)...") 
         
         index = 0
         if default_model in model_options:
@@ -79,15 +79,10 @@ def main():
             
         selected_model = st.selectbox("Model", model_options, index=index, help="Select the LLM model to use. Only displaying free models.")
         
-        if selected_model == "Autre (Custom)...":
-            model_name = st.text_input("Enter Custom Model ID (OpenRouter)", value="openai/gpt-4-turbo")
-        else:
-            model_name = selected_model
+        model_name = selected_model
         
         # Ensure openrouter prefix for litellm
-        if (not model_name.startswith("openrouter/") 
-            and not model_name.startswith("openai/") 
-            and not model_name.startswith("gpt-")):
+        if not model_name.startswith("openrouter/"):
              model_name = f"openrouter/{model_name}"
         
         language = st.selectbox("Output Language", ["Français", "English", "Español", "Deutsch"], help="Language for the final report.")
