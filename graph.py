@@ -53,7 +53,7 @@ def recruit_node(state: AgentState):
             agent = recruiter.recruit(state['input'], temperature=state.get('temperature', 0.7), model_name=FALLBACK_MODEL)
             task = recruit_task(agent, state['input'])
             crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=True)
-            result = crew.kickoff()
+            result = run_crew()
 
         # Check if result has pydantic output
         if hasattr(result, 'pydantic') and result.pydantic:
@@ -104,69 +104,73 @@ def recruit_node(state: AgentState):
 
     return {"experts": experts_data, "iterations": 0}
 
-def hypothesis_node(state: AgentState):
+async def hypothesis_node(state: AgentState):
     """
     Node for generating hypotheses from experts.
     PARALLELIZED.
     """
-    print("--- GÉNÉRATION DES HYPOTHÈSES ---")
+    print("--- GÉNÉRATION DES HYPOTHÈSES (PARALLEL) ---")
     experts_data = state['experts']
-    hypotheses = []
     
-    # Sequential execution for stability
-    for expert_data in experts_data:
+    async def run_expert(expert_data):
         try:
+            # Recreate agent/task inside the thread to avoid sharing state issues if any
+            # Note: CrewAI agents are mostly stateless but better safe.
             agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=state.get('model_name'))
             task = hypothesis_task(agent, state['input'])
-            # Memory disabled
-            crew = Crew(agents=[agent], tasks=[task], verbose=True) 
+            crew = Crew(agents=[agent], tasks=[task], verbose=True)
+            
             @retry_llm
-            def run_crew():
+            def run_crew_sync():
                 return crew.kickoff()
                 
-            try:
-                result = run_crew()
-                hypotheses.append({"expert_name": expert_data['name'], "hypothesis": str(result)})
-            except Exception as e:
-                err_msg = str(e)
-                print(f"⚠️ Expert {expert_data['name']} failed ({err_msg}). Retrying with FALLBACK_MODEL...")
-                try:
-                    agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=FALLBACK_MODEL)
-                    task = hypothesis_task(agent, state['input'])
-                    crew = Crew(agents=[agent], tasks=[task], verbose=True)
-                    result = crew.kickoff()
-                    hypotheses.append({"expert_name": expert_data['name'], "hypothesis": str(result)})
-                except Exception as e2:
-                    print(f"❌ Expert {expert_data['name']} failed completely: {e2}")
-                    hypotheses.append({"expert_name": expert_data['name'], "hypothesis": "Error: Unable to generate hypothesis."})
-
+            # Run blocking call in thread
+            result = await asyncio.to_thread(run_crew_sync)
+            return {"expert_name": expert_data['name'], "hypothesis": str(result)}
+            
         except Exception as e:
-            print(f"Error executing expert {expert_data['name']}: {e}")
-            hypotheses.append({"expert_name": expert_data['name'], "hypothesis": f"Error: {e}"})
+            err_msg = str(e)
+            print(f"⚠️ Expert {expert_data['name']} failed ({err_msg}). Retrying with FALLBACK_MODEL...")
+            try:
+                agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=FALLBACK_MODEL)
+                task = hypothesis_task(agent, state['input'])
+                crew = Crew(agents=[agent], tasks=[task], verbose=True)
+                
+                @retry_llm
+                def run_crew_sync_fallback():
+                    return crew.kickoff()
 
-    return {"hypotheses": hypotheses}
+                result = await asyncio.to_thread(run_crew_sync_fallback)
+                return {"expert_name": expert_data['name'], "hypothesis": str(result)}
+            except Exception as e2:
+                print(f"❌ Expert {expert_data['name']} failed completely: {e2}")
+                return {"expert_name": expert_data['name'], "hypothesis": "Error: Unable to generate hypothesis."}
 
-def cross_pollination_node(state: AgentState):
+    # Execute all experts in parallel
+    results = await asyncio.gather(*(run_expert(e) for e in experts_data))
+    
+    return {"hypotheses": list(results)}
+
+async def cross_pollination_node(state: AgentState):
     """
     Node for cross-pollination between experts.
+    PARALLELIZED.
     """
     print("--- CROSS-POLLINATION (Transdisciplinarité) ---")
     hypotheses = state['hypotheses']
     experts_data = state['experts']
     
-    enriched_hypotheses = []
-    
     # Map expert name to full expert data for easy lookup
     expert_map = {e['name']: e for e in experts_data}
 
-    for h in hypotheses:
+    async def run_cross_pollination(h):
         expert_name = h['expert_name']
         current_hypothesis = h['hypothesis']
         
         # Get expert data
         expert_data = expert_map.get(expert_name)
         if not expert_data:
-            continue
+            return h
             
         # Get other hypotheses
         other_hypotheses = [oh for oh in hypotheses if oh['expert_name'] != expert_name]
@@ -177,12 +181,13 @@ def cross_pollination_node(state: AgentState):
             
             # Memory disabled
             crew = Crew(agents=[agent], tasks=[task], verbose=True)
+            
             @retry_llm
-            def run_crew():
+            def run_crew_sync():
                 return crew.kickoff()
 
             try:
-                result = run_crew()
+                result = await asyncio.to_thread(run_crew_sync)
             except Exception as e:
                 err_msg = str(e)
                 print(f"⚠️ Cross-pollination {expert_name} failed ({err_msg}). Retrying with FALLBACK_MODEL...")
@@ -190,21 +195,28 @@ def cross_pollination_node(state: AgentState):
                     agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=FALLBACK_MODEL)
                     task = cross_pollination_task(agent, current_hypothesis, other_hypotheses, state['input'])
                     crew = Crew(agents=[agent], tasks=[task], verbose=True)
-                    result = crew.kickoff()
+                    
+                    @retry_llm
+                    def run_crew_sync_fallback():
+                         return crew.kickoff()
+                         
+                    result = await asyncio.to_thread(run_crew_sync_fallback)
                 except Exception as e2:
                     print(f"❌ Cross-pollination {expert_name} failed completely: {e2}")
                     result = current_hypothesis # Fallback to original
 
-            
-            enriched_hypotheses.append({
+            return {
                 "expert_name": expert_name, 
-                "hypothesis": str(result) # Replaces the old hypothesis with the enriched one
-            })
+                "hypothesis": str(result)
+            }
         except Exception as e:
              print(f"Error in cross-pollination for {expert_name}: {e}")
-             enriched_hypotheses.append(h) # Keep original if error
+             return h # Keep original if error
 
-    return {"hypotheses": enriched_hypotheses}
+    # Execute all cross-pollination tasks in parallel
+    enriched_hypotheses = await asyncio.gather(*(run_cross_pollination(h) for h in hypotheses))
+
+    return {"hypotheses": list(enriched_hypotheses)}
 
 def debate_node(state: AgentState):
     """
@@ -229,7 +241,7 @@ def debate_node(state: AgentState):
              devils_advocate = DevilsAdvocate().get_agent(temperature=state.get('temperature', 0.7), model_name=FALLBACK_MODEL)
              task = debate_task(devils_advocate, state['hypotheses'], state['input'])
              crew = Crew(agents=[devils_advocate], tasks=[task], verbose=True)
-             result = crew.kickoff()
+             result = run_crew()
         except Exception as e2:
              print(f"❌ Debate failed completely: {e2}")
              result = "Debate skipped due to error."
@@ -265,7 +277,7 @@ def synthesis_node(state: AgentState):
              synthesizer = Synthesizer().get_agent(temperature=state.get('temperature', 0.7), model_name=FALLBACK_MODEL)
              task = synthesis_task(synthesizer, state['debate_minutes'], state['hypotheses'], synthesis_input)
              crew = Crew(agents=[synthesizer], tasks=[task], verbose=True)
-             result = crew.kickoff()
+             result = run_crew()
         except Exception as e2:
              print(f"❌ Synthesis failed completely: {e2}")
              result = "Synthesis skipped due to error. Please check individual hypotheses."

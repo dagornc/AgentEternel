@@ -305,6 +305,10 @@ def render_dagre_graph(nodes, edges, height=550):
                 box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); /* Green Glow */
                 border-color: #10B981;
             }}
+
+            .agent-card.active .card-icon {{
+                animation: spin 4s linear infinite;
+            }}
             
             .card-icon {{
                 font-size: 20px;
@@ -380,6 +384,9 @@ def render_dagre_graph(nodes, edges, height=550):
             }}
              @keyframes flow-reverse {{
                 to {{ stroke-dashoffset: 20; }}
+            }}
+            @keyframes spin {{ 
+                100% {{ transform: rotate(360deg); }} 
             }}
             
             /* --- CONTROLS --- */

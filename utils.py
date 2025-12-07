@@ -44,23 +44,38 @@ def format_output(final_state):
 
     return output
 
+import litellm
+import random
+
 def retry_llm(func):
     """
     Decorator to retry a function call upon failure.
-    Retries 3 times with a 2-second delay.
+    Retries with exponential backoff, specifically handling RateLimitErrors.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        retries = 3
-        delay = 2
-        last_exception = None
-        for i in range(retries):
+        max_retries = 9  # High retry count for rate limits
+        base_delay = 10   # Start with 10 seconds for rate limits
+        
+        for i in range(max_retries):
             try:
                 return func(*args, **kwargs)
             except Exception as e:
-                last_exception = e
-                # Don't sleep on the last attempt
-                if i < retries - 1:
+                # Check for RateLimitError (either class or string 429)
+                is_rate_limit = isinstance(e, litellm.RateLimitError) or "429" in str(e) or "RateLimitError" in str(e)
+                
+                if i < max_retries - 1:
+                    if is_rate_limit:
+                        # Exponential backoff for rate limits: 10, 20, 40, 80... capped at 120s
+                        delay = min(120, (base_delay * (2 ** i)) + random.uniform(1, 5))
+                        print(f"⏳ Quota dépassé (Rate Limit). Attente de {delay:.1f}s avant nouvelle tentative {i+1}/{max_retries}...")
+                    else:
+                        # Standard backoff for other errors
+                        delay = min(60, (2 * (2 ** i)) + random.uniform(0, 1))
+                        print(f"⚠️ Erreur ({e}). Nouvelle tentative dans {delay:.1f}s... ({i+1}/{max_retries})")
+                    
                     time.sleep(delay)
-        raise last_exception
+                else:
+                    print(f"❌ Échec définitif après {max_retries} tentatives.")
+                    raise e
     return wrapper

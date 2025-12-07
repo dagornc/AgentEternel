@@ -49,7 +49,7 @@ def main():
             # Fallback list if API fails
             return [
                 "google/gemini-2.0-flash-exp:free",
-                "meta-llama/llama-3.2-11b-vision-instruct:free",
+                "meta-llama/llama-3.3-70b-instruct:free",
                 "meta-llama/llama-3.1-8b-instruct:free",
                 "mistralai/mistral-7b-instruct:free",
                 "microsoft/phi-3-medium-128k-instruct:free",
@@ -68,7 +68,7 @@ def main():
              model_options = get_openrouter_free_models()
         
         # Ensure default legacy model is present or fallback
-        default_model = "openrouter/openai/gpt-oss-20b:free"
+        default_model = "google/gemini-2.0-flash-exp:free"
         
         # Remove Custom option as per user strict requirement
         # model_options.append("Autre (Custom)...") 
@@ -217,27 +217,32 @@ def main():
                     components.html(cached_render_dagre_graph(st.session_state['nodes'], st.session_state['edges']), height=500)
 
                 # Run the graph with streaming
+                import asyncio
+                
                 state_monitor = initial_state.copy()
                 final_state = None
                 step_counter = 0
-                for output in app.stream(initial_state):
-                    for key, value in output.items():
-                        step_counter += 1
-                        state_monitor.update(value)
-                        
-                        # Update Graph State
-                        st.session_state['nodes'], st.session_state['edges'] = update_graph_state(
-                            key, value, st.session_state['nodes'], st.session_state['edges']
-                        )
-                        
-                        # Status updates removed. Graph visualization is sufficient.
+                
+                async def run_research():
+                    nonlocal state_monitor, final_state, step_counter
+                    async for output in app.astream(initial_state):
+                        for key, value in output.items():
+                            step_counter += 1
+                            state_monitor.update(value)
+                            
+                            # Update Graph State
+                            st.session_state['nodes'], st.session_state['edges'] = update_graph_state(
+                                key, value, st.session_state['nodes'], st.session_state['edges']
+                            )
+                            
+                            if key == "synthesis":
+                                final_state = state_monitor.copy()
 
-                        if key == "synthesis":
-                            final_state = state_monitor.copy()
-
-                        # Update Graph
-                        with graph_placeholder:
-                             components.html(cached_render_dagre_graph(st.session_state['nodes'], st.session_state['edges']), height=500)
+                            # Update Graph
+                            with graph_placeholder:
+                                 components.html(cached_render_dagre_graph(st.session_state['nodes'], st.session_state['edges']), height=500)
+                
+                asyncio.run(run_research())
 
                 if final_state:
                     # Format output
