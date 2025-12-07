@@ -29,8 +29,10 @@ class TestErrorHandling(unittest.TestCase):
     @patch('graph.create_expert_agent')
     @patch('graph.Crew')
     def test_hypothesis_node_double_failure(self, mock_crew, mock_create, mock_task, mock_sleep):
+        import asyncio
         mock_crew_instance = MagicMock()
         mock_crew.return_value = mock_crew_instance
+        # Simulate failure
         mock_crew_instance.kickoff.side_effect = [Exception("RateLimit")] * 20
         
         state = {
@@ -38,7 +40,8 @@ class TestErrorHandling(unittest.TestCase):
             'experts': [{'name': 'Alice', 'role': 'R', 'bias': 'B', 'skill': 'S'}]
         }
         
-        result = hypothesis_node(state)
+        # Use asyncio.run for async node
+        result = asyncio.run(hypothesis_node(state))
         self.assertEqual(len(result['hypotheses']), 1)
         self.assertTrue("Error" in result['hypotheses'][0]['hypothesis'])
 

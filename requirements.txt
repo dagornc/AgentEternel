@@ -4,6 +4,7 @@ langgraph
 langchain
 langchain-community
 duckduckgo-search
+certifi
 langchain-openai
 pydantic
 

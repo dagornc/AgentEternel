@@ -24,20 +24,12 @@ def get_llm(temperature=0.7, model_name=None):
     """
     model = model_name if model_name else DEFAULT_MODEL
     
-    # helper: check for known providers
-    known_providers = ["openrouter/", "openai/", "gpt-", "huggingface/", "ollama/"]
+    # Strictly enforce OpenRouter
+    if not model.startswith("openrouter/"):
+         model = f"openrouter/{model}"
     
-    # Defensive fix: Ensure OpenRouter models have the prefix
-    # usage of "vendor/model" without prefix is common for OpenRouter IDs
-    if not any(model.startswith(p) for p in known_providers):
-         if "/" in model: 
-             model = f"openrouter/{model}"
-    
-    # Determine API Key based on provider
-    if model.startswith("openrouter/"):
-        api_key = os.environ.get("OPENROUTER_API_KEY")
-    else:
-        api_key = os.environ.get("OPENAI_API_KEY")
+    # Always use OpenRouter API Key
+    api_key = os.environ.get("OPENROUTER_API_KEY")
     
     return LLM(
         model=model,
@@ -128,7 +120,7 @@ def create_expert_agent(profile: dict, temperature: float = 0.7, web_search_enab
 
     return Agent(
         role=profile['role'],
-        goal=f"Résoudre le problème en utilisant votre expertise en {profile['role']} et votre compétence en {profile['skill']}. IMPORTANT: VOUS NE POUVEZ UTILISER QU'UN SEUL OUTIL À LA FOIS. NE JAMAIS lister plusieurs outils dans une seule Action.",
+        goal=f"Résoudre le problème en utilisant votre expertise en {profile['role']} et votre compétence en {profile['skill']}. IMPORTANT: VOUS NE POUVEZ UTILISER QU'UN SEUL OUTIL À LA FOIS. NE JAMAIS lister plusieurs outils dans une seule Action. NE JAMAIS mettre le nom de l'Action entre des blocs de code markdown (comme ```). Écrivez juste le nom de l'outil.",
         backstory=f"Vous êtes {profile['name']}. Vous êtes un {profile['bias']}. Votre compétence signature est {profile['skill']}. RAPPEL: Une seule action d'outil à la fois.",
         llm=get_llm(temperature=temperature, model_name=model_name),
         tools=tools,

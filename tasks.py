@@ -92,11 +92,11 @@ def synthesis_task(agent, debate_minutes, hypotheses, input_query):
                     f"Attribuez un score de confiance (0-100%) basé sur la robustesse du débat. "
                     f"SI le score est inférieur à 80%, listez précisément les 'Knowledge Gaps'. "
                     f"Générez également un code Mermaid.js (graph TD). "
-                    f"FORMAT: Vous DEVEZ répondre UNIQUEMENT avec un objet JSON valide correspondant à la structure suivante : "
-                    f"{{ 'solution': '...', 'confidence_score': 0.0, 'knowledge_gaps': ['...'], 'visualization_code': '...' }}",
-        expected_output="Un objet JSON valide correspondant au modèle SynthesisReport.",
-        agent=agent,
-        output_pydantic=SynthesisReport
+                    f"FORMAT: Vous DEVEZ répondre UNIQUEMENT avec un objet JSON valide correspondant à la structure suivante. "
+                    f"Assurez-vous d'échapper correctement les sauts de ligne (\\n) et de ne PAS utiliser de caractères de contrôle interdits.\n"
+                    f"{{ \"solution\": \"...\", \"confidence_score\": 0.0, \"knowledge_gaps\": [\"...\"], \"visualization_code\": \"...\" }}",
+        expected_output="Un objet JSON valide.",
+        agent=agent
     )
 
 def cross_pollination_task(agent, current_hypothesis, other_hypotheses, input_query):
@@ -112,7 +112,7 @@ def cross_pollination_task(agent, current_hypothesis, other_hypotheses, input_qu
     Returns:
         Task: A CrewAI task for enriching the hypothesis.
     """
-    others_text = "\n\n".join([f"- {h['expert_name']} ({h['role']}): {h['hypothesis']}" for h in other_hypotheses])
+    others_text = "\n\n".join([f"- {h['expert_name']} ({h.get('role', 'Expert')}): {h['hypothesis']}" for h in other_hypotheses])
     
     return Task(
         description=f"Vous êtes {agent.role}. Vous avez proposé une hypothèse pour '{input_query}'.\n"

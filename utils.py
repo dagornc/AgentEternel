@@ -54,8 +54,8 @@ def retry_llm(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        max_retries = 9  # High retry count for rate limits
-        base_delay = 10   # Start with 10 seconds for rate limits
+        max_retries = 3  # Reduced from 9 to 3 for faster fallback
+        base_delay = 5   # Reduced from 10s to 5s
         
         for i in range(max_retries):
             try:
@@ -63,12 +63,17 @@ def retry_llm(func):
             except Exception as e:
                 # Check for RateLimitError (either class or string 429)
                 is_rate_limit = isinstance(e, litellm.RateLimitError) or "429" in str(e) or "RateLimitError" in str(e)
+                # Check for ServiceUnavailable (503) from free providers
+                is_service_unavailable = "503" in str(e) or "ServiceUnavailableError" in str(e)
                 
                 if i < max_retries - 1:
                     if is_rate_limit:
-                        # Exponential backoff for rate limits: 10, 20, 40, 80... capped at 120s
-                        delay = min(120, (base_delay * (2 ** i)) + random.uniform(1, 5))
+                        # Exponential backoff for rate limits: 5, 10, 20... capped at 60s
+                        delay = min(60, (base_delay * (2 ** i)) + random.uniform(1, 5))
                         print(f"⏳ Quota dépassé (Rate Limit). Attente de {delay:.1f}s avant nouvelle tentative {i+1}/{max_retries}...")
+                    elif is_service_unavailable:
+                         delay = min(60, (base_delay * (2 ** i)) + random.uniform(1, 5))
+                         print(f"📉 Service indisponible (503). Attente de {delay:.1f}s avant nouvelle tentative {i+1}/{max_retries}...")
                     else:
                         # Standard backoff for other errors
                         delay = min(60, (2 * (2 ** i)) + random.uniform(0, 1))

@@ -18,7 +18,12 @@ import asyncio
 # ...
 
 # REPO
-FALLBACK_MODEL = "openrouter/meta-llama/llama-3.3-70b-instruct:free"
+FALLBACK_MODELS = [
+    "openrouter/meta-llama/llama-3.3-70b-instruct:free",
+    "openrouter/mistralai/mistral-small-3.1-24b-instruct:free",
+    "openrouter/openai/gpt-oss-20b:free",
+    "openrouter/google/gemma-2-9b-it:free"
+]
 
 def recruit_node(state: AgentState):
     """
@@ -32,29 +37,50 @@ def recruit_node(state: AgentState):
     """
     print("--- RECRUITING EXPERTS ---")
     recruiter = RecruiterAgent()
-    agent = recruiter.recruit(state['input'], temperature=state.get('temperature', 0.7), model_name=state.get('model_name'))
-    task = recruit_task(agent, state['input'])
-    
-    # Memory disabled due to embedding API key issues
-    crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=True)
-    @retry_llm
-    def run_crew():
-        return crew.kickoff()
     
     experts_data = []
+    
+    # Determine models to try
+    primary_model = state.get('model_name')
+    models_to_try = [primary_model] if primary_model else []
+    for m in FALLBACK_MODELS:
+        if m not in models_to_try:
+            models_to_try.append(m)
+            
+    result = None
+    last_error = None
 
-    try:
+    for model in models_to_try:
         try:
+            print(f"🔄 Attempting Recruit with model: {model}")
+            agent = recruiter.recruit(state['input'], temperature=state.get('temperature', 0.7), model_name=model)
+            task = recruit_task(agent, state['input'])
+            
+            # Memory disabled due to embedding API key issues
+            crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=True)
+            
+            @retry_llm
+            def run_crew():
+                res = crew.kickoff()
+                # Check if result indicates a failure (CrewAI often returns strings on failure)
+                if isinstance(res, str) and ("Task Failed" in res or "Crew Execution Failed" in res or "LLM Call Failed" in res):
+                     raise Exception(f"CrewAI reported failure: {res[:200]}...")
+                
+                # If result has direct failure output (depends on crewai version)
+                if hasattr(res, 'tasks_output') and any(t.raw and "Task Failed" in t.raw for t in res.tasks_output):
+                     raise Exception("CrewAI Task reported failure.")
+                     
+                return res
+            
             result = run_crew()
+            break # Success, exit loop
+            
         except Exception as e:
             err_msg = str(e)
-            print(f"⚠️ Primary model failed ({err_msg}). Retrying with FALLBACK_MODEL...")
-            # Fallback attempt
-            agent = recruiter.recruit(state['input'], temperature=state.get('temperature', 0.7), model_name=FALLBACK_MODEL)
-            task = recruit_task(agent, state['input'])
-            crew = Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=True)
-            result = run_crew()
+            print(f"⚠️ Model {model} failed ({err_msg}). Switching to next model...")
+            last_error = e
 
+    if result:
         # Check if result has pydantic output
         if hasattr(result, 'pydantic') and result.pydantic:
              # result.pydantic is an ExpertList instance
@@ -78,12 +104,9 @@ def recruit_node(state: AgentState):
                      experts_data = data.get('experts', [])
             except:
                  pass
-            
-            if not experts_data:
-                raise ValueError("No structured output returned")
-
-    except Exception as e:
-        print(f"❌ ERROR in recruit_node: {e}")
+    
+    if not experts_data:
+        print(f"❌ All models failed or produced invalid output. Last error: {last_error}")
         # Fallback to default experts
         experts_data = [
             {"name": "Expert A", "role": "Generalist", "bias": "Neutral", "skill": "Problem Solving", "backstory": "Experienced generalist solver."},
@@ -112,39 +135,45 @@ async def hypothesis_node(state: AgentState):
     print("--- GÉNÉRATION DES HYPOTHÈSES (PARALLEL) ---")
     experts_data = state['experts']
     
+    # Determine models to try
+    primary_model = state.get('model_name')
+    models_to_try = [primary_model] if primary_model else []
+    for m in FALLBACK_MODELS:
+        if m not in models_to_try:
+            models_to_try.append(m)
+            
     async def run_expert(expert_data):
-        try:
-            # Recreate agent/task inside the thread to avoid sharing state issues if any
-            # Note: CrewAI agents are mostly stateless but better safe.
-            agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=state.get('model_name'))
-            task = hypothesis_task(agent, state['input'])
-            crew = Crew(agents=[agent], tasks=[task], verbose=True)
-            
-            @retry_llm
-            def run_crew_sync():
-                return crew.kickoff()
-                
-            # Run blocking call in thread
-            result = await asyncio.to_thread(run_crew_sync)
-            return {"expert_name": expert_data['name'], "hypothesis": str(result)}
-            
-        except Exception as e:
-            err_msg = str(e)
-            print(f"⚠️ Expert {expert_data['name']} failed ({err_msg}). Retrying with FALLBACK_MODEL...")
+        for model in models_to_try:
             try:
-                agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=FALLBACK_MODEL)
+                # Recreate agent/task inside the thread to avoid sharing state issues if any
+                agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=model)
                 task = hypothesis_task(agent, state['input'])
                 crew = Crew(agents=[agent], tasks=[task], verbose=True)
                 
                 @retry_llm
-                def run_crew_sync_fallback():
-                    return crew.kickoff()
-
-                result = await asyncio.to_thread(run_crew_sync_fallback)
-                return {"expert_name": expert_data['name'], "hypothesis": str(result)}
-            except Exception as e2:
-                print(f"❌ Expert {expert_data['name']} failed completely: {e2}")
-                return {"expert_name": expert_data['name'], "hypothesis": "Error: Unable to generate hypothesis."}
+                def run_crew_sync():
+                    res = crew.kickoff()
+                    # Check for error strings
+                    if isinstance(res, str) and ("Task Failed" in res or "Crew Execution Failed" in res or "LLM Call Failed" in res):
+                        raise Exception(f"CrewAI reported failure: {res[:200]}...")
+                    return res
+                    
+                # Run blocking call in thread
+                result = await asyncio.to_thread(run_crew_sync)
+                return {
+                    "expert_name": expert_data['name'], 
+                    "role": expert_data['role'], 
+                    "bias": expert_data['bias'], 
+                    "hypothesis": str(result)
+                }
+                
+            except Exception as e:
+                err_msg = str(e)
+                print(f"⚠️ Expert {expert_data['name']} failed with model {model} ({err_msg}). Switching to next model...")
+        
+        # If all failed
+        print(f"❌ Expert {expert_data['name']} failed completely.")
+        return {"expert_name": expert_data['name'], "hypothesis": "Error: Unable to generate hypothesis."}
 
     # Execute all experts in parallel
     results = await asyncio.gather(*(run_expert(e) for e in experts_data))
@@ -163,6 +192,13 @@ async def cross_pollination_node(state: AgentState):
     # Map expert name to full expert data for easy lookup
     expert_map = {e['name']: e for e in experts_data}
 
+    # Determine models to try
+    primary_model = state.get('model_name')
+    models_to_try = [primary_model] if primary_model else []
+    for m in FALLBACK_MODELS:
+        if m not in models_to_try:
+            models_to_try.append(m)
+
     async def run_cross_pollination(h):
         expert_name = h['expert_name']
         current_hypothesis = h['hypothesis']
@@ -175,43 +211,34 @@ async def cross_pollination_node(state: AgentState):
         # Get other hypotheses
         other_hypotheses = [oh for oh in hypotheses if oh['expert_name'] != expert_name]
         
-        try:
-            agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=state.get('model_name'))
-            task = cross_pollination_task(agent, current_hypothesis, other_hypotheses, state['input'])
-            
-            # Memory disabled
-            crew = Crew(agents=[agent], tasks=[task], verbose=True)
-            
-            @retry_llm
-            def run_crew_sync():
-                return crew.kickoff()
-
+        for model in models_to_try:
             try:
-                result = await asyncio.to_thread(run_crew_sync)
-            except Exception as e:
-                err_msg = str(e)
-                print(f"⚠️ Cross-pollination {expert_name} failed ({err_msg}). Retrying with FALLBACK_MODEL...")
-                try:
-                    agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=FALLBACK_MODEL)
-                    task = cross_pollination_task(agent, current_hypothesis, other_hypotheses, state['input'])
-                    crew = Crew(agents=[agent], tasks=[task], verbose=True)
-                    
-                    @retry_llm
-                    def run_crew_sync_fallback():
-                         return crew.kickoff()
-                         
-                    result = await asyncio.to_thread(run_crew_sync_fallback)
-                except Exception as e2:
-                    print(f"❌ Cross-pollination {expert_name} failed completely: {e2}")
-                    result = current_hypothesis # Fallback to original
+                agent = create_expert_agent(expert_data, temperature=state.get('temperature', 0.7), web_search_enabled=state.get('web_search_enabled', True), model_name=model)
+                task = cross_pollination_task(agent, current_hypothesis, other_hypotheses, state['input'])
+                
+                # Memory disabled
+                crew = Crew(agents=[agent], tasks=[task], verbose=True)
+                
+                @retry_llm
+                def run_crew_sync():
+                    res = crew.kickoff()
+                    if isinstance(res, str) and ("Task Failed" in res or "Crew Execution Failed" in res or "LLM Call Failed" in res):
+                         raise Exception(f"CrewAI reported failure: {res[:200]}...")
+                    return res
 
-            return {
-                "expert_name": expert_name, 
-                "hypothesis": str(result)
-            }
-        except Exception as e:
-             print(f"Error in cross-pollination for {expert_name}: {e}")
-             return h # Keep original if error
+                result = await asyncio.to_thread(run_crew_sync)
+                
+                return {
+                    "expert_name": expert_name, 
+                    "hypothesis": str(result)
+                }
+            except Exception as e:
+                print(f"⚠️ Cross-pollination {expert_name} failed with model {model}: {e}")
+                continue
+
+        # If all failed
+        print(f"❌ Cross-pollination {expert_name} failed completely.")
+        return h # Keep original if error
 
     # Execute all cross-pollination tasks in parallel
     enriched_hypotheses = await asyncio.gather(*(run_cross_pollination(h) for h in hypotheses))
@@ -223,107 +250,158 @@ def debate_node(state: AgentState):
     Node for the debate phase.
     """
     print("--- DÉBAT ---")
-    devils_advocate = DevilsAdvocate().get_agent(temperature=state.get('temperature', 0.7), model_name=state.get('model_name'))
-    task = debate_task(devils_advocate, state['hypotheses'], state['input'])
     
-    # Memory disabled
-    crew = Crew(agents=[devils_advocate], tasks=[task], verbose=True)
-    @retry_llm
-    def run_crew():
-        return crew.kickoff()
-
-    try:
-        result = run_crew()
-    except Exception as e:
-        err_msg = str(e)
-        print(f"⚠️ Debate failed ({err_msg}). Retrying with FALLBACK_MODEL...")
+    # Determine models to try
+    primary_model = state.get('model_name')
+    models_to_try = [primary_model] if primary_model else []
+    for m in FALLBACK_MODELS:
+        if m not in models_to_try:
+            models_to_try.append(m)
+            
+    result = "Debate skipped due to error."
+    
+    for model in models_to_try:
         try:
-             devils_advocate = DevilsAdvocate().get_agent(temperature=state.get('temperature', 0.7), model_name=FALLBACK_MODEL)
-             task = debate_task(devils_advocate, state['hypotheses'], state['input'])
-             crew = Crew(agents=[devils_advocate], tasks=[task], verbose=True)
-             result = run_crew()
-        except Exception as e2:
-             print(f"❌ Debate failed completely: {e2}")
-             result = "Debate skipped due to error."
+            print(f"🔄 Attempting Debate with model: {model}")
+            devils_advocate = DevilsAdvocate().get_agent(temperature=state.get('temperature', 0.7), model_name=model)
+            task = debate_task(devils_advocate, state['hypotheses'], state['input'])
+            
+            # Memory disabled
+            crew = Crew(agents=[devils_advocate], tasks=[task], verbose=True)
+            @retry_llm
+            def run_crew():
+                res = crew.kickoff()
+                if isinstance(res, str) and ("Task Failed" in res or "Crew Execution Failed" in res or "LLM Call Failed" in res):
+                     raise Exception(f"CrewAI reported failure: {res[:200]}...")
+                return res
+
+            result = run_crew()
+            break
+        except Exception as e:
+            print(f"⚠️ Debate failed with model {model}: {e}")
+            continue
+
     return {"debate_minutes": str(result)}
 
 def synthesis_node(state: AgentState):
     """
     Node for synthesizing the final solution.
-    Uses Pydantic structured output.
+    Uses robust manual JSON parsing to avoid CrewAI recursion errors.
     """
     print("--- SYNTHESIS ---")
-    synthesizer = Synthesizer().get_agent(temperature=state.get('temperature', 0.7), model_name=state.get('model_name'))
     
+    # Determine models to try
+    primary_model = state.get('model_name')
+    models_to_try = [primary_model] if primary_model else []
+    for m in FALLBACK_MODELS:
+        if m not in models_to_try:
+            models_to_try.append(m)
+            
     # Append language instruction if specified
     synthesis_input = state['input']
     if state.get('language'):
         synthesis_input += f"\n\nIMPORTANT: Please write the final solution/report in {state['language']}."
 
-    task = synthesis_task(synthesizer, state['debate_minutes'], state['hypotheses'], synthesis_input)
+    result = None
     
-    # Memory disabled
-    crew = Crew(agents=[synthesizer], tasks=[task], verbose=True)
-    @retry_llm
-    def run_crew():
-        return crew.kickoff()
-
-    try:
-        result = run_crew()
-    except Exception as e:
-        err_msg = str(e)
-        print(f"⚠️ Synthesis failed ({err_msg}). Retrying with FALLBACK_MODEL...")
+    for model in models_to_try:
         try:
-             synthesizer = Synthesizer().get_agent(temperature=state.get('temperature', 0.7), model_name=FALLBACK_MODEL)
-             task = synthesis_task(synthesizer, state['debate_minutes'], state['hypotheses'], synthesis_input)
-             crew = Crew(agents=[synthesizer], tasks=[task], verbose=True)
-             result = run_crew()
-        except Exception as e2:
-             print(f"❌ Synthesis failed completely: {e2}")
-             result = "Synthesis skipped due to error. Please check individual hypotheses."
-    
-    # Extract confidence score from Pydantic output
+            print(f"🔄 Attempting Synthesis with model: {model}")
+            synthesizer = Synthesizer().get_agent(temperature=state.get('temperature', 0.7), model_name=model)
+            task = synthesis_task(synthesizer, state['debate_minutes'], state['hypotheses'], synthesis_input)
+            
+            # Memory disabled
+            crew = Crew(agents=[synthesizer], tasks=[task], verbose=True)
+            @retry_llm
+            def run_crew():
+                res = crew.kickoff()
+                # Check for error strings
+                if isinstance(res, str) and ("Task Failed" in res or "Crew Execution Failed" in res or "LLM Call Failed" in res):
+                     raise Exception(f"CrewAI reported failure: {res[:200]}...")
+                return res
+
+            result = run_crew()
+            break
+        except Exception as e:
+            print(f"⚠️ Synthesis failed with model {model}: {e}")
+            continue
+            
+    if result is None:
+         print("❌ Synthesis failed completely.")
+         return {
+             "final_solution": "Synthesis failed due to technical errors.",
+             "confidence_score": 0.0,
+             "iterations": state['iterations'] + 1,
+             "knowledge_gaps": ["Technical failure during synthesis"],
+             "visualization_code": "",
+             "input": state['input']
+         }
+
+    # Extract info using robust manual parsing
     solution = ""
     score = 0.0
+    gaps = []
+    viz_code = ""
     
     try:
-        if hasattr(result, 'pydantic') and result.pydantic:
-            solution = result.pydantic.solution
-            score = result.pydantic.confidence_score
-            gaps = getattr(result.pydantic, 'knowledge_gaps', [])
-            viz_code = getattr(result.pydantic, 'visualization_code', "")
-        elif hasattr(result, 'json_dict') and result.json_dict:
-            solution = result.json_dict.get('solution', str(result))
-            score = result.json_dict.get('confidence_score', 0.0)
-            gaps = result.json_dict.get('knowledge_gaps', [])
-            viz_code = result.json_dict.get('visualization_code', "")
-        else:
-             # Fallback
-             solution = str(result)
-             match = re.search(r'Confidence Score.*?(\d+(\.\d+)?)', solution, re.IGNORECASE)
-             if match:
-                  score = float(match.group(1))
-             gaps = []
-             viz_code = ""
-    except Exception as e:
-        print(f"Error parsing synthesis: {e}")
-        solution = str(result)
-        gaps = []
-        viz_code = ""
+        raw_output = str(result)
         
+        # 1. Strip Markdown code blocks
+        clean_json = raw_output.replace("```json", "").replace("```", "").strip()
+        
+        # 2. Sanitize Control Characters (preserve \n, \r, \t, remove others)
+        # remove all chars < 32 except 9 (tab), 10 (lf), 13 (cr)
+        # This regex matches control characters that are NOT \t, \n, \r
+        clean_json = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', clean_json)
+        
+        # 3. Parse JSON
+        data = json.loads(clean_json)
+        
+        # 4. Extract fields
+        solution = data.get('solution', "")
+        score = data.get('confidence_score', 0.0)
+        gaps = data.get('knowledge_gaps', [])
+        viz_code = data.get('visualization_code', "")
+        
+        # Verify types
+        if not isinstance(solution, str): solution = str(solution)
+        if not isinstance(score, (int, float)): score = 0.0
+        if not isinstance(gaps, list): gaps = []
+
+    except json.JSONDecodeError as e:
+        print(f"⚠️ JSON Decode Error in Synthesis: {e}")
+        # Attempt fallback to raw string / regex extraction if JSON fails
+        solution = str(result)
+        match = re.search(r'Confidence Score.*?(\d+(\.\d+)?)', solution, re.IGNORECASE)
+        if match:
+              score = float(match.group(1))
+    except Exception as e:
+        print(f"⚠️ Unexpected Error parsing synthesis: {e}")
+        solution = str(result)
+
+    # Validate score range
+    if score > 1.0 and score <= 100.0:
+        score = score  # Assume 0-100 scale
+    elif score <= 1.0:
+        score = score * 100 # Assume 0-1 scale
+
     # Update input with gaps if looping
     new_input = state['input']
     if score < 80 and gaps:
          gaps_text = "\n- ".join(gaps)
-         # Check if we already appended to avoid duplication
          if "[ITERATION UPDATE]" not in new_input:
              new_input += f"\n\n[ITERATION UPDATE] Focus on these Knowledge Gaps:\n- {gaps_text}"
          else:
-             # Basic append for now, or replace logic if feeling fancy. 
-             # Let's just append new gaps.
              new_input += f"\n\n[NEW GAPS]:\n- {gaps_text}"
 
-    return {"final_solution": solution, "confidence_score": score, "iterations": state['iterations'] + 1, "knowledge_gaps": gaps, "visualization_code": viz_code, "input": new_input}
+    return {
+        "final_solution": solution, 
+        "confidence_score": score, 
+        "iterations": state['iterations'] + 1, 
+        "knowledge_gaps": gaps, 
+        "visualization_code": viz_code, 
+        "input": new_input
+    }
 
 def check_confidence(state: AgentState):
     """

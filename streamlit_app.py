@@ -23,31 +23,35 @@ def main():
     # Sidebar for configuration
     with st.sidebar:
         st.header("Configuration")
-        api_key = os.environ.get("OPENAI_API_KEY")
+        api_key = os.environ.get("OPENROUTER_API_KEY")
         if not api_key:
-            st.error("OPENAI_API_KEY not found in environment variables.")
+            st.error("OPENROUTER_API_KEY not found in environment variables.")
             st.info("Please set it in your .env file.")
         else:
-            st.success("OpenAI API Key detected.")
+            st.success("OpenRouter API Key detected.")
             
         # Graph Layout Options - Removed specific layout options as Dagre is now default
         st.info("Using Dagre-D3 for visualization.")
 
         @st.cache_data(ttl=3600)
-        def get_openrouter_free_models():
-            """Fetches the list of free models from OpenRouter API."""
+        def get_openrouter_models(free_only=True):
+            """Fetches the list of models from OpenRouter API."""
             try:
                 response = requests.get("https://openrouter.ai/api/v1/models")
                 if response.status_code == 200:
                     models = response.json()["data"]
-                    # Filter for models with ':free' in ID
-                    free_models = [m["id"] for m in models if ":free" in m["id"]]
-                    return sorted(free_models)
+                    if free_only:
+                        # Filter for models with ':free' in ID
+                        model_list = [m["id"] for m in models if ":free" in m["id"]]
+                    else:
+                        # Return all models
+                        model_list = [m["id"] for m in models]
+                    return sorted(model_list)
             except Exception as e:
                 print(f"Error fetching models: {e}")
             
             # Fallback list if API fails
-            return [
+            fallback_free = [
                 "google/gemini-2.0-flash-exp:free",
                 "meta-llama/llama-3.3-70b-instruct:free",
                 "meta-llama/llama-3.1-8b-instruct:free",
@@ -55,17 +59,26 @@ def main():
                 "microsoft/phi-3-medium-128k-instruct:free",
                 "openrouter/openai/gpt-oss-20b:free"
             ]
+            
+            if free_only:
+                return fallback_free
+            else:
+                 # If API fails and they want paid, we can't really guess, so just return free fallback + some popular paid ones?
+                 # Or just return free fallback.
+                 return fallback_free
 
         st.markdown("---")
         st.header("Parameters")
         temperature = st.slider("Model Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1, help="Controls randomness: 0 is deterministic, 1 is creative.")
         target_confidence = st.slider("Target Confidence Score", min_value=0, max_value=100, value=80, step=5, help="Target score to end the research loop.")
         max_iterations = st.slider("Max Iterations", min_value=1, max_value=10, value=3, step=1, help="Limit the number of feedback loops.")
-        web_search = st.checkbox("Enable Web Search", value=True, help="Allow experts to search the internet.")
-
+        web_search = st.checkbox("Enable Web Search", value=True, key="web_search_enable" ,help="Allow experts to search the internet.")
         
+        # Free only filter
+        free_only_models = st.checkbox("Modèles Gratuits Uniquement", value=True, help="Filtrer pour n'afficher que les modèles gratuits.")
+
         with st.spinner("Fetching available models..."):
-             model_options = get_openrouter_free_models()
+             model_options = get_openrouter_models(free_only=free_only_models)
         
         # Ensure default legacy model is present or fallback
         default_model = "google/gemini-2.0-flash-exp:free"
@@ -76,8 +89,10 @@ def main():
         index = 0
         if default_model in model_options:
             index = model_options.index(default_model)
+        elif len(model_options) > 0:
+            index = 0
             
-        selected_model = st.selectbox("Model", model_options, index=index, help="Select the LLM model to use. Only displaying free models.")
+        selected_model = st.selectbox("Model", model_options, index=index, help="Select the LLM model to use.")
         
         model_name = selected_model
         
@@ -96,7 +111,7 @@ def main():
             return
         
         if not api_key:
-            st.error("Cannot proceed without OpenAI API Key.")
+            st.error("Cannot proceed without OpenRouter API Key.")
             return
         
         st.session_state['research_started'] = True
@@ -119,7 +134,7 @@ def main():
             "shape": "rect",
             "padding": 0
         }
-        update_node_visuals(recruiter_node, active=True)
+        update_node_visuals(recruiter_node, status="working")
         st.session_state['nodes'].append(recruiter_node)
         st.session_state['edges'] = [] # Reset graph edges
 
@@ -151,7 +166,7 @@ def main():
                 "shape": "rect",
                 "padding": 0
             }
-            update_node_visuals(recruiter_node, active=True)
+            update_node_visuals(recruiter_node, status="working")
             st.session_state['nodes'].append(recruiter_node)
 
         if 'edges' not in st.session_state:
@@ -232,7 +247,9 @@ def main():
                             
                             # Update Graph State
                             st.session_state['nodes'], st.session_state['edges'] = update_graph_state(
-                                key, value, st.session_state['nodes'], st.session_state['edges']
+                                key, value, st.session_state['nodes'], st.session_state['edges'],
+                                iter_current=min(state_monitor.get('iterations', 0) + 1, state_monitor.get('max_iterations', 3)),
+                                iter_total=state_monitor.get('max_iterations', 3)
                             )
                             
                             if key == "synthesis":
